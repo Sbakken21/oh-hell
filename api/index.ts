@@ -1,24 +1,26 @@
 import express, { Application, Request, Response } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { Deck } from "./Deck";
+import { Hand } from "./Hand";
 
 const app: Application = express();
+const httpServer = createServer(app);
 const port = 3000;
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.get(
-    "/",
-    async (req: Request, res: Response): Promise<Response> => {
-        return res.status(200).send({
-            message: "Hello world!",
-        });
+const io = new Server(httpServer, {
+    cors: {
+        origin: "http://localhost:8080"
     }
-);
+});
 
-try {
-    app.listen(port, (): void => {
-        console.log(`Connected to port ${port}`);
-    });
-} catch (error: any) {
-    console.log(`Error occured: ${error.message}`);
-}
+io.on("connection", (socket) => {
+    console.log(socket.id);
+    const deck = new Deck();
+    const hand = new Hand(4);
+    for(let i=1; i<=4; i++){
+        hand.addCard(deck.removeCard());
+    }
+    console.log(hand.getHand());
+});
+
+httpServer.listen(port);

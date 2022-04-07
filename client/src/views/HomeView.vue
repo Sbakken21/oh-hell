@@ -2,6 +2,8 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png" />
     <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+    <router-link to="/create">Create Lobby</router-link>
+    <router-link to="/join">Join Lobby</router-link>
   </div>
 </template>
 
