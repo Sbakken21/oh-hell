@@ -3,12 +3,20 @@
         GAME:
         {{ game }}
         <hr>
-        BID:
-        <input type="text" v-model="bid">
-        <button @click="setBid">Bid</button>
+        <div v-show="game && game.phase === 0 && game.activePlayer.id == socket.id">
+            BID:
+            <input type="text" v-model="bid">
+            <button @click="setBid">Bid</button>
+        </div>
         <hr>
-        HAND:
-        {{ hand }}
+        Player Data:
+        {{ JSON.stringify(player) }}
+        <hr>
+        Hand:
+        <div v-for="card, index in player.hand" :key="`card-${index}`">
+            {{ card }}
+            <hr>
+        </div>
     </div>
 </template>
 
@@ -26,9 +34,18 @@ export default defineComponent({
 
     setup(props) {
         const router = useRoute();
-        let game = ref("");
+        let game = ref({
+            phase: 0,
+            activePlayer: {},
+            players: [],
+        });
         const bid = ref("");
-        let hand = ref("");
+        let player = ref({
+            hand: [],
+            name: "",
+            score: 0,
+            isActive: false,
+        });
 
         const setBid = () => {
             props.socket.emit("player.bid", {
@@ -42,21 +59,26 @@ export default defineComponent({
                 gameId: router.params.id,
             });
 
-            props.socket.on("lobby.join", (response) => {
+            props.socket.on("lobby.join", (response: any) => {
                 console.log("RESPONSE:");
                 console.log(response);
                 game.value = response;
             });
 
-            props.socket.on("player.bid", (response) => {
+            props.socket.on("player.update", (response: any) => {
+                console.log("Updated:");
+                player.value = response;
+            })
+
+            props.socket.on("player.bid", (response: any) => {
                 console.log("NEW BID");
                 game.value = response;
                 console.log(response);
             });
 
-            props.socket.on("player.round", (data) => {
-                console.log(data);
-                hand.value = data;
+            props.socket.on("player.round", (data: any) => {
+                console.log("Player Data: " + data);
+                player.value = data;
             });
         });
 
@@ -64,7 +86,7 @@ export default defineComponent({
             game,
             bid,
             setBid,
-            hand,
+            player,
         }
     },
 })

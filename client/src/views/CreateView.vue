@@ -34,7 +34,7 @@ export default defineComponent({
         }
 
         onMounted(() => {
-            props.socket.on('client.join', (data) => {
+            props.socket.on('client.join', (data: any) => {
                 console.log("HERE");
                 console.log(data);
                 lobbyId.value = data;

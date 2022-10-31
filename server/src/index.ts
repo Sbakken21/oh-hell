@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { Client } from "socket.io/dist/client";
 import { Game } from "./models/Game";
 import { ClientService } from "./services/ClientService";
 import { GameService } from "./services/GameService";
@@ -41,12 +42,13 @@ io.on("connection", (socket) => {
         game.addPlayer(client);
 
         const players = game.getPlayers();
-        const playerTest: any[] = [];
+        const playerList: any[] = [];
 
-        for(const id in players) {
-            const player = players[id];
+        for(const [index, socketKey] of game.getPlayerPositions().entries()) {
+            const player = game.getPlayer(socketKey);
+            if(index === 0) player.setActive(true);
 
-            let playerInfo = {
+            const playerInfo = {
                 name: player.getName(),
                 score: player.getScore(),
                 status: player.getStatus(),
@@ -55,51 +57,72 @@ io.on("connection", (socket) => {
                 isActive: player.getActive(),
             };
 
-            playerTest.push(playerInfo);
+            playerList.push(playerInfo);
         }
 
         // tslint:disable-next-line:no-console
-        // console.log(playerTest);
-        
+        console.log(playerList);
+
         io.in(game.getId()).emit("lobby.join", {
-            players: playerTest
+            players: playerList
         });
 
         // tslint:disable-next-line:no-console
-        console.log(game.getPlayerCount(), game.getMaxPlayers());
+        console.log(`Player Count: ${game.getPlayerCount()}, ${game.getMaxPlayers()}`);
 
-        if(game.getPlayerCount() == game.getMaxPlayers()){
+        if(game.getPlayerCount() === game.getMaxPlayers()){
+            // tslint:disable-next-line:no-console
             console.log("Starting game...");
             game.start();
 
             io.in(game.getId()).emit("lobby.join", {
                 trump: game.getTrump(),
                 round: game.getRound(),
-                players: playerTest
+                players: playerList,
+                phase: game.getPhase(),
+                activePlayer: game.getActivePlayer(),
             });
 
-            for(const id in players) {
-                const player = players[id];
+            for(const player of Object.values(players)) {
+
+                // tslint:disable-next-line:no-console
                 console.log("HAND: " + player.getHand());
-                console.log(player.getSocketId());
-                io.to(player.getSocketId()).emit("player.round", player.getHand());
+
+
+                // tslint:disable-next-line:no-console
+                console.log("SOCKET: " + player.getSocketId());
+
+                const playerInfo = {
+                    hand: player.getHand(),
+                    name: player.getName(),
+                    score: player.getScore(),
+                    status: player.getStatus(),
+                    isActive: player.getActive(),
+                };
+
+                io.to(player.getSocketId()).emit("player.round", playerInfo);
             }
         }
     });
 
     socket.on("player.bid", (data) => {
         const game = gameService.getGame(data.gameId);
-        let player = game.getPlayer(socket.id);
-        console.log("BID: " + data.bid);
-        player.setBid(data.bid);
+        const playerRef = game.getPlayer(socket.id);
+        const bidsTaken = game.getBidsTaken();
+
+        if(playerRef.getSocketId() === game.getPlayerPositions()[bidsTaken]){
+            // tslint:disable-next-line:no-console
+            console.log("BID: " + data.bid);
+            game.setBid(playerRef, data.bid);
+            game.setActivePlayer(game.getBidsTaken());
+        }
 
         const players = game.getPlayers();
-        const playerTest: any[] = [];
+        const playerList: any[] = [];
 
-        for(const id in players) {
-            const player = players[id];
+        for(const player of Object.values(players)) {
 
-            let playerInfo = {
+            const playerInfo = {
                 name: player.getName(),
                 score: player.getScore(),
                 status: player.getStatus(),
@@ -108,12 +131,32 @@ io.on("connection", (socket) => {
                 isActive: player.getActive(),
             };
 
-            playerTest.push(playerInfo);
+            playerList.push(playerInfo);
+
+            const emitPlayerInfo = {
+                hand: player.getHand(),
+                name: player.getName(),
+                score: player.getScore(),
+                status: player.getStatus(),
+                isActive: player.getActive(),
+            };
+
+            io.to(player.getSocketId()).emit("player.update", emitPlayerInfo);
+        }
+
+        // End of bidding phase. TODO: start play phase
+        if(game.getBidsTaken() >= game.getPlayerCount()) {
+            game.setPhase(1);
+            game.setActivePlayer((game.getRound() % game.getPlayerCount()) - 1);
+
         }
 
         io.in(game.getId()).emit("player.bid", {
-            bidPlayer: game.getActivePlayer(),
-            players: playerTest,
+            trump: game.getTrump(),
+            round: game.getRound(),
+            players: playerList,
+            phase: game.getPhase(),
+            activePlayer: game.getActivePlayer(),
         });
     })
 

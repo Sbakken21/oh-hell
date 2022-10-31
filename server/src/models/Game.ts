@@ -7,31 +7,35 @@ export class Game {
     private name: string;
     private maxPlayers: number;
     private players: any;
+    private playerPositions: string[];
     private owner: Client;
     private round: number;
     private deck: Deck;
     private trump: Card;
+    private bidsTaken: number;
+    private cardsTaken: number;
+    private phase: number;
 
     constructor(id: string, owner: Client, maxPlayers: number) {
         this.id = id;
         this.owner = owner;
         this.players = {};
-        this.round = 1;
+        this.playerPositions = [];
+        this.round = 0;
         this.maxPlayers = maxPlayers;
+        this.bidsTaken = 0;
+        this.cardsTaken = 0;
+        this.phase = 0;
     }
 
     start() {
         this.deck = new Deck();
-        
-        for(const id in this.players) {
-            const player = this.players[id];
+        this.round++;
+        this.bidsTaken = 0;
 
+        for(const player of Object.values(this.getPlayers())) {
             player.setHand(this.deck.getPlayerHand(this.round));
         }
-
-        // this.players.forEach((player) => {
-        //     player.setHand(this.deck.getPlayerHand(this.round));
-        // });
 
         this.setTrump();
     }
@@ -50,41 +54,11 @@ export class Game {
 
     addPlayer(player: Client) {
         this.players[player.getSocketId()] = player;
+        this.playerPositions.push(player.getSocketId());
     }
 
-    getPlayers() {
+    getPlayers(): object {
         return this.players;
-        // const playerOutput: { name: string; score: number; status: number; socketId: string; bid: number; isActive: boolean; }[] = [];
-
-        // for(const id in this.players) {
-        //     const player = this.players[id];
-
-        //     let playerInfo = {
-        //         name: player.getName(),
-        //         score: player.getScore(),
-        //         status: player.getStatus(),
-        //         socketId: player.getSocketId(),
-        //         bid: player.getBid(),
-        //         isActive: player.getActive(),
-        //     };
-
-        //     playerOutput.push(playerInfo); 
-        // }
-
-        // // this.players.forEach((player) => {
-        // //     let playerInfo = {
-        // //         name: player.getName(),
-        // //         score: player.getScore(),
-        // //         status: player.getStatus(),
-        // //         socketId: player.getSocketId(),
-        // //         bid: player.getBid(),
-        // //         isActive: player.getActive(),
-        // //     };
-
-        // //     playerOutput.push(playerInfo);
-        // // });
-        
-        // return playerOutput;
     }
 
     getRound() {
@@ -100,25 +74,52 @@ export class Game {
     }
 
     getActivePlayer() {
-
-        for(const id in this.players) {
-            const player = this.players[id];
-            if(player.getActive()) return player;
+        for(const player of Object.values(this.getPlayers())) {
+            if(player.getActive()) {
+                return {
+                    name: player.getName(),
+                    id: player.getSocketId(),
+                }
+            }
         }
-
-        // return this.players.forEach((player) => {
-        //     if(player.getActive()) return player;
-        // })
     }
 
     getPlayer(socketId: string) {
-
         return this.players[socketId];
-
-        // return this.players.forEach((player) => {
-        //     if(player.getSocketId() == socketId) {
-        //         return player;
-        //     }
-        // });
     }
+
+    getPlayerPositions() {
+        return this.playerPositions;
+    }
+
+    setBid(player: Client, bid: number) {
+        player.setBid(bid);
+        this.bidsTaken++;
+    }
+
+    getBidsTaken() {
+        return this.bidsTaken;
+    }
+
+    setActivePlayer(position: number) {
+        for(const player of Object.values(this.getPlayers())) {
+            if(player.getSocketId() === this.getPlayerPositions()[position]) {
+                player.setActive(true);
+            } else {
+                player.setActive(false);
+            }
+        }
+    }
+
+    setPhase(phase: number) {
+        this.phase = phase;
+    }
+
+    getPhase() {
+        return this.phase;
+    }
+
+    // setCardTaken(player: Client, card: Card) {
+
+    // }
 }

@@ -19,6 +19,7 @@ export class Client {
         this.name = socket.username;
         this.hand = [];
         this.active = false;
+        this.bid = null;
     }
 
     getSocketId() {
@@ -37,7 +38,7 @@ export class Client {
         this.socket = socket;
     }
 
-    getName() {
+    getName(): string {
         return this.name;
     }
 
@@ -91,5 +92,5 @@ export class Client {
 
     setActive(active: boolean) {
         this.active = active;
-    }    
+    }
 }
