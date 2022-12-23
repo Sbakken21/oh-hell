@@ -158,7 +158,17 @@ io.on("connection", (socket) => {
             phase: game.getPhase(),
             activePlayer: game.getActivePlayer(),
         });
-    })
+    });
+
+    socket.on("player.play", (data) => {
+        const game = gameService.getGame(data.gameId);
+        const playerRef = game.getPlayer(socket.id);
+
+        // TODO: check if card is playable here. Also needs frontend check
+
+
+
+    });
 
 
     socket.on("disconnect", () => {

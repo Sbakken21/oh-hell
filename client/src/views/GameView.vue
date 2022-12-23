@@ -13,9 +13,8 @@
         {{ JSON.stringify(player) }}
         <hr>
         Hand:
-        <div v-for="card, index in player.hand" :key="`card-${index}`">
-            {{ card }}
-            <hr>
+        <div class="flex flex-wrap justify-center">
+            <CardComponent  v-for="card, index in player.hand" :key="`card-${index}`" :card="card" />
         </div>
     </div>
 </template>
@@ -23,6 +22,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from '@vue/runtime-core'
 import { useRoute } from 'vue-router';
+import CardComponent from '@/components/CardComponent.vue';
 
 export default defineComponent({
     props: {
@@ -30,6 +30,9 @@ export default defineComponent({
             type: Object,
             required: true
         }
+    },
+    components: {
+        CardComponent
     },
 
     setup(props) {
