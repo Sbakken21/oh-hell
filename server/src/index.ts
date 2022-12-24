@@ -2,8 +2,6 @@ import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { Client } from "socket.io/dist/client";
-import { Game } from "./models/Game";
 import { ClientService } from "./services/ClientService";
 import { GameService } from "./services/GameService";
 
@@ -163,6 +161,9 @@ io.on("connection", (socket) => {
     socket.on("player.play", (data) => {
         const game = gameService.getGame(data.gameId);
         const playerRef = game.getPlayer(socket.id);
+
+        // tslint:disable-next-line:no-console
+        console.log(playerRef);
 
         // TODO: check if card is playable here. Also needs frontend check
 

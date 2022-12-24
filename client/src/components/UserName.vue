@@ -1,17 +1,21 @@
 <template>
     <div>
-        <h1>User name</h1>
         <label>Username:</label>
-        <input type="text" v-model="userName">
-        <button @click="create">Create</button>
+        <form @submit.prevent="create">
+            <input-component type="text" v-model="userName" required autofocus />
+            <primary-button type="submit">Create</primary-button>
+        </form>
     </div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import { useRouter } from 'vue-router';
+import InputComponent from './InputComponent.vue';
+import PrimaryButton from './PrimaryButton.vue';
 
 @Options({
+    components: { InputComponent, PrimaryButton },
     props: {
         socket: Object,
         msg: String,

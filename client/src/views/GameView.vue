@@ -1,19 +1,18 @@
 <template>
     <div>
-        GAME:
-        {{ game }}
-        <hr>
-        <div v-show="game && game.phase === 0 && game.activePlayer.id == socket.id">
-            BID:
-            <input type="text" v-model="bid">
-            <button @click="setBid">Bid</button>
+        <PlayersCard :players="game.players" />
+        <h1>Trump Card</h1>
+        <div  v-if="game && game.trump && game.trump.suit">
+            <CardComponent :card="game.trump" key="trump-card" />
         </div>
+        <hr>
+        <BidComponent v-show="game && game.phase === 0 && game.activePlayer.id == socket.id" @bid="setBid" />
         <hr>
         Player Data:
         {{ JSON.stringify(player) }}
         <hr>
         Hand:
-        <div class="flex flex-wrap justify-center">
+        <div v-if="player" class="flex flex-wrap justify-center">
             <CardComponent  v-for="card, index in player.hand" :key="`card-${index}`" :card="card" />
         </div>
     </div>
@@ -23,6 +22,8 @@
 import { defineComponent, onMounted, ref } from '@vue/runtime-core'
 import { useRoute } from 'vue-router';
 import CardComponent from '@/components/CardComponent.vue';
+import BidComponent from '@/components/BidComponent.vue';
+import PlayersCard from '@/components/PlayersCard.vue';
 
 export default defineComponent({
     props: {
@@ -32,7 +33,9 @@ export default defineComponent({
         }
     },
     components: {
-        CardComponent
+        CardComponent,
+        BidComponent,
+        PlayersCard
     },
 
     setup(props) {
@@ -41,8 +44,9 @@ export default defineComponent({
             phase: 0,
             activePlayer: {},
             players: [],
+            trump: {}
         });
-        const bid = ref("");
+
         let player = ref({
             hand: [],
             name: "",
@@ -50,10 +54,10 @@ export default defineComponent({
             isActive: false,
         });
 
-        const setBid = () => {
+        const setBid = (bid: number) => {
             props.socket.emit("player.bid", {
                 gameId: router.params.id,
-                bid: bid.value,
+                bid: bid,
             });
         };
 
@@ -87,7 +91,6 @@ export default defineComponent({
 
         return {
             game,
-            bid,
             setBid,
             player,
         }

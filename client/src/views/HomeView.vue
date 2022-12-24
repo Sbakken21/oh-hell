@@ -1,7 +1,6 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <UserName :socket="socket" msg="testing" />
+    <UserName :socket="socket" />
   </div>
 </template>
 

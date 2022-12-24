@@ -2,9 +2,11 @@
   <div>
     <h1>Create</h1>
     <h3>User: {{ socket.auth.username }}</h3>
-    <label>Max Players (2-5)</label>
-    <input type="number" min="2" max="5" v-model="maxPlayers">
-    <button type="button" @click="create">Create</button>
+    <form @submit.prevent="create">
+        <label>Max Players (2-5)</label>
+        <input type="number" min="2" max="5" v-model="maxPlayers">
+        <primary-button type="submit">Create</primary-button>
+    </form>
     <hr>
     <h1>Lobby ID: {{ lobbyId }}</h1>
   </div>
@@ -13,8 +15,10 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "@vue/runtime-core";
 import { useRouter } from 'vue-router';
+import PrimaryButton from "../components/PrimaryButton.vue";
 
 export default defineComponent({
+    components: { PrimaryButton },
     props: {
         socket: {
             type: Object,
